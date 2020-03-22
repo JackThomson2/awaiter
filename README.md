@@ -1,4 +1,4 @@
-#Basic HTTP Server
+# Basic HTTP Server
 
 This is a basic file serving HTTP serving application written in rust using asyn-std. 
 The basic premise of the app is around mapping a directory and serving on specific port.
