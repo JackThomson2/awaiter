@@ -5,6 +5,8 @@ use crate::file_mapper::MappedFiles;
 use async_std::prelude::*;
 use async_std::net::TcpStream;
 
+use colored::Colorize;
+
 use mime_guess::from_path;
 
 use std::io;
@@ -20,7 +22,13 @@ pub async fn send_file_response(stream: &mut TcpStream, sending: &str, map: &Map
         }
         sending = "/index.html";
     }
-    println!("Serving {}", sending);
+
+    println!(
+        "[{}] {:8} Serving directory '{}'",
+        "*".purple(),
+        "Server".purple().bold(),
+        sending.green().underline()
+    );
 
     let data = map.get(sending).unwrap();
     let data = data.value();

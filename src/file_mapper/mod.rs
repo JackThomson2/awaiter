@@ -2,6 +2,8 @@ use dashmap::DashMap;
 use std::{fs::{self, File}};
 use std::io::Read;
 
+use colored::Colorize;
+
 use mime_guess::from_path;
 
 #[derive(Clone, Debug)]
@@ -55,8 +57,24 @@ fn recursively_search(path: &str, relative_len: usize, map: &mut MappedFiles) {
 /// This starts the recursive search to find the files from a path
 pub fn get_mapped_files(relative: &str) -> MappedFiles {
     let mut mapping = MappedFiles::new();
+
+    println!(
+        "[{}] {:8} Loading file from '{}'",
+        "*".blue(),
+        "Cache".cyan().bold(),
+        relative.green().underline()
+    );
+
     recursively_search(relative, relative.len(), &mut mapping);
 
-    println!("We read {} files", mapping.len());
+    let len_str = format!("{}", mapping.len());
+
+    println!(
+        "[{}] {:8} Read {} files into our cache",
+        "*".blue(),
+        "Cache".cyan().bold(),
+        len_str.green().bold()
+    );
+
     mapping
 }
