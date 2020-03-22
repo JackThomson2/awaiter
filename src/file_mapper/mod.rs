@@ -52,7 +52,6 @@ fn recursively_search(path: &str, relative_len: usize, map: &mut MappedFiles) {
     }
 }
 
-
 /// This starts the recursive search to find the files from a path
 pub fn get_mapped_files(relative: &str) -> MappedFiles {
     let mut mapping = MappedFiles::new();

@@ -10,8 +10,15 @@ use mime_guess::from_path;
 use std::io;
 
 pub async fn send_file_response(stream: &mut TcpStream, sending: &str, map: &MappedFiles) -> io::Result<()> {
+    let mut sending= sending;
     if !map.contains_key(sending) {
-        return send_404_response(stream).await;
+        if !map.contains_key("/404.html") {
+            return send_404_response(stream, map).await;
+        }
+        if sending != "/" && !map.contains_key("/index.html") {
+            sending = "/404.html";
+        }
+        sending = "/index.html";
     }
     println!("Serving {}", sending);
 
@@ -25,7 +32,7 @@ pub async fn send_file_response(stream: &mut TcpStream, sending: &str, map: &Map
     stream.write_all(&data.data).await
 }
 
-pub async fn send_404_response(stream: &mut TcpStream) -> io::Result<()> {
+pub async fn send_404_response(stream: &mut TcpStream, map :&MappedFiles) -> io::Result<()> {
     let message  = format!("{} 404 \r\nServer: {}\r\nContent-Type: {}\r\nAccept-Ranges: bytes\n\rContent-Length: 0 \r\n\r\n"
                            ,VERSION, NAME, TEXT);
 

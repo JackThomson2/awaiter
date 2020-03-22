@@ -17,6 +17,7 @@ pub async fn handle_request(stream: TcpStream, cache: &MappedFiles) -> io::Resul
     if let Ok(n) = reader.read(&mut buf).await {
         let read = std::str::from_utf8(&buf[..n]);
         if let Ok(read) = read {
+            println!("{}", read);
             let res = try_parse_headers(read);
             return send_file_response(&mut reader, &res.location, cache).await
         }
