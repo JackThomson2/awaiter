@@ -24,7 +24,7 @@ pub async fn send_file_response(stream: &mut TcpStream, sending: &str, map: &Map
     }
 
     println!(
-        "[{}] {:8} Serving directory '{}'",
+        "[{}] {:8} Serving file '{}'",
         "*".purple(),
         "Server".purple().bold(),
         sending.green().underline()
