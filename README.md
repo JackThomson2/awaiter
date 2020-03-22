@@ -25,4 +25,4 @@ Don't use for anything other than testing. This app requires cargo to be install
 
 ## Example output
 
-![Example output](img/example,png)
+![Example output](img/example.png)
