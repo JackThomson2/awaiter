@@ -1,4 +1,5 @@
-# Basic HTTP Server
+# Awaiter
+## Static file server
 
 ![Rust](https://github.com/JackThomson2/http-server/workflows/Rust/badge.svg?branch=master)
 
