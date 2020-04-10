@@ -1,26 +1,32 @@
-mod header;
-
-use async_std::io;
-use async_std::net::TcpStream;
-use async_std::prelude::*;
-
-use header::try_parse_headers;
+use tokio::io;
+use tokio::net::TcpStream;
+use tokio::prelude::*;
 
 use crate::file_mapper::MappedFiles;
 use crate::response::text::*;
 
 #[inline]
-pub async fn handle_request(stream: TcpStream, cache: &MappedFiles) -> io::Result<()> {
-    let mut reader = stream.clone();
-    let mut buf = vec![0u8; 1024];
+pub async fn handle_request(stream: &mut TcpStream, cache: &MappedFiles) -> io::Result<()> {
+    let mut buf = [0u8; 1024];
 
-    if let Ok(n) = reader.read(&mut buf).await {
-        let read = std::str::from_utf8(&buf[..n]);
-        if let Ok(read) = read {
-            let res = try_parse_headers(read);
-            return send_file_response(&mut reader, &res.location, cache).await
+    if let Ok(read) = stream.read(&mut buf).await {
+        let mut headers = [httparse::EMPTY_HEADER; 16];
+        let mut req = httparse::Request::new(&mut headers);
+
+        let res = req.parse(&buf[..read]).unwrap();
+
+        if res.is_complete() {
+            match req.path {
+                Some(ref path) => {
+                    return send_file_response(stream, path, cache).await;
+                }
+                None => println!("No path provided"),
+            }
         }
+
+        //let res = try_parse_headers(read);
+        return send_file_response(stream, "NONE", cache).await;
     }
-    send_text_response(&mut reader, "<html><body>Hello World</body></html>").await?;
+    send_text_response(stream, "<html><body>Hello World</body></html>").await?;
     Ok(())
 }

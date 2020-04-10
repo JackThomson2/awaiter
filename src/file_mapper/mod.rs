@@ -1,5 +1,5 @@
 use dashmap::DashMap;
-use std::{fs::{self, File}};
+use std::fs::{self, File};
 use std::io::Read;
 
 use colored::Colorize;
@@ -9,7 +9,7 @@ use mime_guess::from_path;
 #[derive(Clone, Debug)]
 pub struct FoundFile {
     pub data: Vec<u8>,
-    pub mime: String
+    pub mime: String,
 }
 
 /// Used to store a cache of directory locations and their bytes
@@ -19,12 +19,16 @@ pub type MappedFiles = DashMap<String, FoundFile>;
 /// contents into the dashmap
 fn recursively_search(path: &str, relative_len: usize, map: &mut MappedFiles) {
     let directory = fs::read_dir(path);
-    if directory.is_err() {return;}
+    if directory.is_err() {
+        return;
+    }
 
     let directory = directory.unwrap();
 
     for entry in directory {
-        if entry.is_err() {continue};
+        if entry.is_err() {
+            continue;
+        };
 
         let entry = entry.unwrap();
         let path = entry.path();
@@ -38,7 +42,9 @@ fn recursively_search(path: &str, relative_len: usize, map: &mut MappedFiles) {
         }
 
         let f = File::open(path_str);
-        if f.is_err() {continue;}
+        if f.is_err() {
+            continue;
+        }
 
         let mut f = f.unwrap();
         let mut buffer = Vec::new();
@@ -50,7 +56,15 @@ fn recursively_search(path: &str, relative_len: usize, map: &mut MappedFiles) {
         let key = &path_str[relative_len..path_str.len()];
         let mime = from_path(key).first_raw().unwrap_or("text/html");
 
-        map.insert(key.to_string(), FoundFile {data: buffer, mime: mime.to_string()});
+        let key = key.replace("\\", "/");
+
+        map.insert(
+            key.to_string(),
+            FoundFile {
+                data: buffer,
+                mime: mime.to_string(),
+            },
+        );
     }
 }
 

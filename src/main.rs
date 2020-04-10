@@ -1,49 +1,45 @@
-mod handler;
-mod statics;
-mod response;
 mod file_mapper;
+mod handler;
+mod response;
 mod settings;
+mod statics;
 
-use async_std::io;
-use async_std::net::TcpListener;
-use async_std::prelude::*;
-use async_std::task;
+use tokio::io;
+use tokio::net::TcpListener;
+use tokio::prelude::*;
+use tokio::task;
 
-use settings::load_settings;
 use file_mapper::get_mapped_files;
 use handler::handle_request;
+use settings::load_settings;
 
 use colored::Colorize;
 
 #[global_allocator]
 static ALLOC: snmalloc_rs::SnMalloc = snmalloc_rs::SnMalloc;
 
-fn main() -> io::Result<()> {
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let settings = load_settings();
     let file_cache = get_mapped_files(&settings.serve_root);
 
-    let http_address = format!("127.0.0.1:{}", settings.http_port);
+    let http_address = format!("0.0.0.0:{}", settings.http_port);
+    let mut listener = TcpListener::bind(http_address).await?;
 
-    task::block_on(async {
-        let listener = TcpListener::bind(http_address).await?;
+    println!(
+        "[{}] {:8} Listening for HTTP traffic on '{}'",
+        "*".purple(),
+        "Server".purple().bold(),
+        listener.local_addr()?.to_string().green().underline()
+    );
 
-        println!(
-            "[{}] {:8} Listening for HTTP traffic on '{}'",
-            "*".purple(),
-            "Server".purple().bold(),
-            listener.local_addr()?.to_string().green().underline()
-        );
+    loop {
+        let (mut socket, _) = listener.accept().await?;
+        let cache = file_cache.clone();
 
-        let mut incoming = listener.incoming();
-
-        while let Some(stream) = incoming.next().await {
-            let stream = stream?;
-            let cache = file_cache.clone();
-            task::spawn(async {
-                let copy = cache;
-                handle_request(stream, &copy).await.unwrap();
-            });
-        }
-        Ok(())
-    })
+        tokio::spawn(async move {
+            let copy = cache;
+            handle_request(&mut socket, &copy).await.unwrap();
+        });
+    }
 }
